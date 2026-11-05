@@ -1,0 +1,304 @@
+--
+title: "Penguins"
+output: html_document
+date: "2026-11-05"
+author: "Alex Macnab"
+---
+
+
+
+```{r}
+#Set working directory
+
+setwd("/Users/alexandermacnab24/Desktop/Master of Marine Biology /T1/R4MS/code/R1M1")
+
+getwd()
+library(readr)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(readr)
+library(palmerpenguins)
+library(readxl)
+library(ggplot2)
+
+```
+
+
+
+```{r}
+## Inventory every active object currently residing in the session RAM
+objects()
+
+
+## Purge global environment 
+rm(list = ls())
+# Confirm that global session memory now completely vacant
+objects()
+
+read_csv("mangrove_survey_raw.csv")
+
+library(readr)
+library(readxl)
+
+fish <- read_excel(
+  "/Users/alexandermacnab24/Desktop/Master of Marine Biology /T1/R4MS/code/R1M1/fish_catch_data.xlsx"
+)
+
+AC <- read_tsv(
+  "/Users/alexandermacnab24/Desktop/Master of Marine Biology /T1/R4MS/code/R1M1/acoustic_telemetry_stream.txt"
+)
+
+reef <- read_csv(
+  "/Users/alexandermacnab24/Desktop/Master of Marine Biology /T1/R4MS/code/R1M1/reef_cover_log.csv"
+)
+
+mangrove <- read_csv(
+  "/Users/alexandermacnab24/Desktop/Master of Marine Biology /T1/R4MS/code/R1M1/mangrove_survey_raw.csv"
+)
+
+
+
+list.files()
+
+```
+
+
+```{r}
+mangrove_cover <- read_csv(
+  "/Users/alexandermacnab24/Desktop/Master of Marine Biology /T1/R4MS/code/R1M1/mangrove_survey_raw.csv",
+  skip = 5,
+  na = c(".", "NA", "9999", "ND", "blank")
+)
+
+
+                           
+ #Force a modern tibble to degrade into a legacy base R data frame structure
+                           
+
+
+
+
+#Print the old-style dataframe structure to view
+                           
+#Install the data  package (execute this command once in your console pane and then delete)
+                           
+#Install. packages ("palmer penguins)
+
+
+
+
+
+#Load the package data into active memory 
+library(palmerpenguins)
+                           
+                           
+ #Examine the stucture of the dataset - always do this when loading a new dataset!
+data(penguins)
+
+
+glimpse(penguins)
+
+
+```
+
+
+
+
+
+```{r}
+#tidyverse version # Shows the entire architectural anatamoy of the dataset
+                           
+                           
+
+str(penguins) #Base R version
+                           
+                           
+# <fct> (factor) Categorical grouping with fixed levels ( Adeile , Gentoo and Chinstrap Penguins)
+  # (dbl- Double) Continuous numeric measurements containg decimals (bill length)
+                           # (int - integer) Whole number variables  tracking counts (body mass)
+                           
+                           #Generate an exploratory summary matrix
+                           summary(penguins)
+                           
+                           #Vertically slice specific morphometric variables by explicit name
+                           morphology_metrics <- select(penguins, species, bill_length_mm, bill_depth_mm, body_mass_g)
+                           glimpse(morphology_metrics)
+                           
+                           #Retain a continous block of atrributes using the colon operator
+                           spatial_block <- select(penguins, species:island)
+                           
+                           #Discard logisitics tracking attributes while preserving everything else using the minus sign
+                           clean_scientific_fields. <- select(penguins, -year)
+                           
+                           
+                           #Isolate observations belonging to a single categorical target group
+                           adelie_cohort <- filter(penguins, species == "Adelie")
+                           
+                           #Sift out individuals using continous numerical boundary thresholds
+                           #Preserves only large penguins whose mass exceeds 4500 grams
+                           heavy_penguins <- filter(penguins,body_mass_g >4500)
+                           
+                           # Combine multiple conditional parameters across separate attributes 
+                           #Preserves records matching Gentoo penguins sampled explicitly on Biscoe Island
+                           biscoe_gentoo <- filter(penguins, species== "Gentoo" & island == "Biscoe")
+                           
+                           
+                           #Sifts records matching multiple targeting flags within an explicit set 
+                           sub_islands <- filter(penguins,island %in% c("Dream", "Torgersen"))
+                           
+                           
+                           # Sort penguins by ascending body mass (Default setting: Smallest mass first)
+                           lightest_first <- arrange(penguins, body_mass_g)
+                           
+                           
+                           
+                           # Sort penguins in descending sequence using the desc() layout wrapper
+                           heaviest_first <- arrange(penguins, desc(body_mass_g))
+                           
+                           # Execute nested sorting criteria: Group by species, then sort by descending bill length
+                           stratified_morphology <- arrange(penguins, species, desc(bill_length_mm))
+                           
+                           
+                           
+                           #Pipe line
+                           penguins_final <- penguins |>
+                             mutate(bill_ratio = bill_length_mm / bill_depth_mm) |>
+                             filter(species == "Adelie")
+```
+
+
+```{r}
+  
+                           # Calculate a new morphological ratio in our environment
+                           penguin_ratios <- penguins  |> 
+                             mutate(body_mass_kg = body_mass_g / 1000,   # Convert grams to kilograms
+                                    bill_ratio = bill_length_mm / bill_depth_mm  # Bill ratio
+                             )
+                           # View your newly engineered variables appended to the far-right columns
+                           glimpse(penguin_ratios)
+                           
+                           # Grouping our active memory penguins by species
+                           grouped_penguins <- group_by(penguins, species)
+                           
+                           
+                           
+                           # Notice that the table looks identical, but metadata notes 'Groups: species [3]'
+                           print(grouped_penguins)
+                           # Collapsing the buckets into explicit summary metrics
+                           species_mass_summary <- summarise(grouped_penguins,
+                                                             mean_mass_g = mean(body_mass_g)
+                           )
+                           # NA for the two penguin species due Missing Value trap
+                           
+                           print(species_mass_summary)
+                           
+                           
+                           
+                           # Overcoming the missing value trap using na.rm = TRUE
+                           biological_signal <- penguins %>%
+                             group_by(species, sex) %>%
+                             summarise(
+                               sample_size = n(),                                     # Count total individuals per category
+                               mean_mass_g = mean(body_mass_g, na.rm = TRUE),         # Calculate mean ignoring missing cells
+                               sd_mass_g   = sd(body_mass_g, na.rm = TRUE)            # Standard deviation calculation
+                             )
+                           
+                           print(biological_signal)
+                           
+                           
+                           
+                           # Pipe directly from aggregation to plotting with error bars
+                           
+                           mass_compare_plot <- penguins |>
+                             group_by(species, island) |>
+                             summarise(
+                               mean_mass = mean(body_mass_g, na.rm = TRUE),
+                               sd_mass = sd(body_mass_g, na.rm = TRUE),
+                               n = n(),
+                               .groups = "drop"
+                             ) |>
+                             ggplot(aes(x = species, y = mean_mass, colour = island)) +
+                             geom_point(size = 3) +
+                             geom_errorbar(
+                               aes(
+                                 ymin = mean_mass - sd_mass,
+                                 ymax = mean_mass + sd_mass
+                               ),
+                               width = 0.2
+                             ) +
+                             labs(
+                               title = "Mean Body Mass by Species and Island",
+                               subtitle = "Error bars represent standard deviation",
+                               y = "Mean Body Mass (g)",
+                               x = "Species"
+                             ) +
+                             theme_minimal()
+                           
+                           
+                           mass_compare_plot
+                           
+```
+
+                           
+                           
+```{r}
+biological_signal2 <- penguins_final %>%
+                             group_by(species, sex) %>%
+                             summarise(
+                               sample_size = n(),                                     # Count total individuals per category
+                               mean_length_mm = mean(bill_length_mm, na.rm = TRUE),         # Calculate mean ignoring missing cells
+                               sd_length_mm  = sd(bill_length_mm, na.rm = TRUE)            # Standard deviation calculation
+                             )
+                           
+                
+                           
+                           
+                           
+                           
+                           mean(penguins_final$body_mass_g)
+                           
+                           bill_summary <- penguins |>
+                             group_by(species, island) |>
+                             summarise(
+                               mean_length = mean(bill_length_mm, na.rm = TRUE),
+                               sd_length = sd(bill_length_mm, na.rm = TRUE),
+                               .groups = "drop"
+                             )
+                           ggplot(bill_summary,
+                                  aes(x = species, y = mean_length, colour = island)) +
+                             geom_point(size = 3) +
+                             geom_errorbar(
+                               aes(
+                                 ymin = mean_length - sd_length,
+                                 ymax = mean_length + sd_length
+                               ),
+                               width = 0.2
+                             )
+                           
+                           
+                           
+                           head(mass_compare_plot$data)
+                           
+                           #Boxplot
+                           penguins %>%
+                             ggplot(aes(x = species, y = body_mass_g, fill = island))+
+                             geom_boxplot(na.rm = TRUE)+
+                             labs(
+                               x = "species",
+                               y = "Mean Mass (g)",
+                               fill = "Island"
+                             )+
+                             theme_minimal()
+```
+                           
+                           
+                           
+```{r}
+```
+
+
+```{r}
+```
+                           
+                           
